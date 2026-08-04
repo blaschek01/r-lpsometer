@@ -62,6 +62,7 @@
   .readout { display:flex; align-items:baseline; gap:8px; margin-top:-6px; }
   .readout-value { font-family:'Oswald',sans-serif; font-size:46px; font-weight:600; }
   .readout-unit { font-size:11px; letter-spacing:2px; color:var(--muted); }
+  .live-timer { font-family:'Oswald',sans-serif; font-size:14px; color:var(--muted); margin-top:2px; min-height:18px; }
   .status-text { font-size:13px; color:var(--muted); margin-top:8px; text-align:center; min-height:18px; }
   .status-text.rec { color:var(--red); }
   .status-text.armed { color:var(--brass-bright); }
@@ -84,7 +85,8 @@
   @keyframes pop { from { transform:scale(0.9); opacity:0; } to { transform:scale(1); opacity:1; } }
   .result-name { font-family:'Oswald',sans-serif; font-size:22px; font-weight:600; }
   .result-cat { font-size:15px; font-weight:700; letter-spacing:1px; margin:6px 0; }
-  .result-score { font-size:13px; color:var(--muted); }
+  .result-score { font-family:'Oswald',sans-serif; font-size:30px; font-weight:700; margin:4px 0 2px; }
+  .result-detail { font-size:12px; color:var(--muted); }
 
   .empty-state { color:var(--muted); font-size:13px; font-style:italic; }
   .row { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid #241f19; }
@@ -95,9 +97,10 @@
   .row-name { font-size:15px; margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .row-bar-track { height:6px; background:#241f19; border-radius:3px; overflow:hidden; }
   .row-bar-fill { height:100%; border-radius:3px; transition:width 300ms ease; }
-  .row-stats { text-align:right; min-width:84px; }
+  .row-stats { text-align:right; min-width:92px; }
   .row-count { font-family:'Oswald',sans-serif; font-size:18px; font-weight:600; }
   .row-cat { font-size:10px; letter-spacing:0.5px; margin-top:2px; }
+  .row-best { font-size:10px; color:var(--muted); margin-top:1px; }
 
   .reset-button {
     margin-top:8px; width:100%; background:transparent; border:1px solid var(--border);
@@ -156,6 +159,7 @@
         <span class="readout-value" id="levelValue" style="color:var(--green)">0</span>
         <span class="readout-unit">PEGEL</span>
       </div>
+      <div class="live-timer" id="liveTimer"></div>
       <div class="status-text" id="statusText">Wähle oben zuerst eine Person aus.</div>
 
       <button class="big-button" id="micButton" disabled>
@@ -184,23 +188,45 @@
 
 <script>
 // ===== Einstellungen (bei Bedarf anpassen) =====
-const THRESH_ON = 0.30;    // ab hier beginnt ein Rülpser (höher = unempfindlicher)
-const THRESH_OFF = 0.15;   // darunter gilt der Rülpser als beendet
-const MIN_EVENT_MS = 200;  // kürzere Geräusche werden ignoriert
-const MAX_EVENT_MS = 5000; // Notbremse: nach so vielen ms wird spätestens beendet
-const END_SILENCE_MS = 250;// so lange muss es leise sein, damit "beendet" gilt
+// PEGEL / EMPFINDLICHKEIT
+const PEAK_REF = 0.55;     // Lautstärke (rms), die als 100% Pegel gilt. HÖHER = unempfindlicher.
+const LOUD_CURVE = 0.85;   // Kurvenform (1 = linear; <1 spreizt oben, >1 spreizt unten)
+const THRESH_ON = 0.34;    // ab diesem Pegel (0-1) beginnt ein Rülpser
+const THRESH_OFF = 0.20;   // darunter gilt der Rülpser als beendet
+
+// DAUER
+const DURATION_FULL_MS = 3000; // ab dieser Länge gibt es volle Dauer-Punkte
+const MIN_EVENT_MS = 250;      // kürzere Geräusche werden ignoriert
+const MAX_EVENT_MS = 8000;     // Notbremse: spätestens hier beenden
+const END_SILENCE_MS = 300;    // so lange muss es leise sein, damit "beendet" gilt
+
+// GEWICHTUNG DES ENDERGEBNISSES
+const W_LOUD = 0.6;   // Anteil Lautstärke am Gesamt-Score
+const W_DUR  = 0.4;   // Anteil Dauer am Gesamt-Score
 // ================================================
 
+// Kategorien auf Basis des Gesamt-Scores (0-100)
 const CATEGORIES = [
-  { max:0.42, label:'Mini', color:'#6B8F6B' },
-  { max:0.58, label:'Standard', color:'#C9A961' },
-  { max:0.74, label:'Bierzelt-Format', color:'#E3934A' },
-  { max:0.88, label:'Wandschütternd', color:'#D6483D' },
-  { max:1.01, label:'LEGENDÄR', color:'#F0D24A' },
+  { max:25,  label:'Mini', color:'#6B8F6B' },
+  { max:45,  label:'Standard', color:'#C9A961' },
+  { max:65,  label:'Bierzelt-Format', color:'#E3934A' },
+  { max:85,  label:'Wandschütternd', color:'#D6483D' },
+  { max:101, label:'LEGENDÄR', color:'#F0D24A' },
 ];
-function categoryFor(v){ return CATEGORIES.find(c => v <= c.max) || CATEGORIES[CATEGORIES.length-1]; }
+function categoryFor(score){ return CATEGORIES.find(c => score <= c.max) || CATEGORIES[CATEGORIES.length-1]; }
 function uid(){ return Math.random().toString(36).slice(2,10); }
 function escapeHtml(s){ return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+// Pegel-Umrechnung: rms -> 0..1, unempfindlicher gemacht
+function levelFromRms(rms){
+  const v = Math.min(1, Math.max(0, rms / PEAK_REF));
+  return Math.pow(v, LOUD_CURVE);
+}
+// Gesamt-Score aus Spitzenpegel (0-1) und Dauer (ms) -> 0..100
+function scoreFrom(peakLevel, durationMs){
+  const durScore = Math.min(1, durationMs / DURATION_FULL_MS);
+  return Math.round((peakLevel * W_LOUD + durScore * W_DUR) * 100);
+}
 
 let persons = [];
 let activeId = null;
@@ -208,7 +234,7 @@ let listening = false;
 let audioCtx, analyser, stream, rafId;
 const ev = { above:false, peak:0, aboveSince:0, belowSince:0 };
 
-const STORAGE_KEY = 'roelpso_data_v2';
+const STORAGE_KEY = 'roelpso_data_v3';
 function load(){
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -235,6 +261,7 @@ const micLabel = document.getElementById('micLabel');
 const errorText = document.getElementById('errorText');
 const needleGroup = document.getElementById('needleGroup');
 const levelValue = document.getElementById('levelValue');
+const liveTimer = document.getElementById('liveTimer');
 const statusText = document.getElementById('statusText');
 const resultSlot = document.getElementById('resultSlot');
 
@@ -272,11 +299,13 @@ function renderLeaderboard(){
   const el = document.getElementById('leaderboard');
   const withData = persons.filter(p => p.count > 0);
   if (withData.length === 0){ el.innerHTML = '<div class="empty-state">Noch keine Rülpser erfasst.</div>'; return; }
-  const globalMax = Math.max(0.001, ...withData.map(p => p.loudest));
-  const sorted = [...withData].sort((a,b) => b.count - a.count || b.loudest - a.loudest);
+  const globalMax = Math.max(1, ...withData.map(p => p.bestScore));
+  // Sortierung: bester Score zuerst, bei Gleichstand mehr Rülpser
+  const sorted = [...withData].sort((a,b) => b.bestScore - a.bestScore || b.count - a.count);
   el.innerHTML = sorted.map((p,i) => {
-    const pct = Math.round((p.loudest/globalMax)*100);
-    const c = categoryFor(p.loudest);
+    const pct = Math.round((p.bestScore/globalMax)*100);
+    const c = categoryFor(p.bestScore);
+    const durSec = (p.bestDurationMs/1000).toFixed(1);
     return '<div class="row ' + (i===0?'top1':'') + '">' +
       '<div class="row-rank">' + (i+1) + '</div>' +
       '<div class="row-info">' +
@@ -284,8 +313,9 @@ function renderLeaderboard(){
         '<div class="row-bar-track"><div class="row-bar-fill" style="width:' + pct + '%;background:' + c.color + '"></div></div>' +
       '</div>' +
       '<div class="row-stats">' +
-        '<div class="row-count">' + p.count + '×</div>' +
+        '<div class="row-count" style="color:' + c.color + '">' + p.bestScore + '</div>' +
         '<div class="row-cat" style="color:' + c.color + '">' + c.label + '</div>' +
+        '<div class="row-best">' + p.count + '× · ' + durSec + 's</div>' +
       '</div>' +
     '</div>';
   }).join('');
@@ -313,7 +343,7 @@ function addPerson(){
   const input = document.getElementById('newNameInput');
   const name = input.value.trim();
   if (!name) return;
-  const p = { id:uid(), name, count:0, loudest:0 };
+  const p = { id:uid(), name, count:0, bestScore:0, bestDurationMs:0 };
   persons.push(p);
   activeId = p.id;
   input.value = '';
@@ -321,26 +351,29 @@ function addPerson(){
 }
 
 document.getElementById('resetBtn').addEventListener('click', () => {
-  persons = persons.map(p => ({ ...p, count:0, loudest:0 }));
+  persons = persons.map(p => ({ ...p, count:0, bestScore:0, bestDurationMs:0 }));
   save(); update();
 });
 
-function showResult(name, peak){
-  const c = categoryFor(peak);
+function showResult(name, score, durationMs, peakLevel){
+  const c = categoryFor(score);
+  const durSec = (durationMs/1000).toFixed(1);
   resultSlot.innerHTML = '<div class="result-card" style="border-color:' + c.color + '">' +
     '<div class="result-name">' + escapeHtml(name) + '</div>' +
+    '<div class="result-score" style="color:' + c.color + '">' + score + '</div>' +
     '<div class="result-cat" style="color:' + c.color + '">' + c.label + '</div>' +
-    '<div class="result-score">Pegel ' + Math.round(peak*100) + ' · +1 Rülpser</div>' +
+    '<div class="result-detail">Länge ' + durSec + 's · Spitzenpegel ' + Math.round(peakLevel*100) + '</div>' +
   '</div>';
 }
 
-function registerBurp(peak){
+function registerBurp(peakLevel, durationMs){
   const p = persons.find(x => x.id === activeId);
   if (!p) return;
+  const score = scoreFrom(peakLevel, durationMs);
   p.count += 1;
-  p.loudest = Math.max(p.loudest, peak);
+  if (score > p.bestScore){ p.bestScore = score; p.bestDurationMs = durationMs; }
   save();
-  showResult(p.name, peak);
+  showResult(p.name, score, durationMs, peakLevel);
   renderLeaderboard();
 }
 
@@ -366,34 +399,43 @@ async function startListening(){
       let sum = 0;
       for (let i=0;i<data.length;i++) sum += data[i]*data[i];
       const rms = Math.sqrt(sum/data.length);
-      const scaled = Math.min(1, Math.max(0, Math.log10(rms*40+1)/1.3));
+      const level = levelFromRms(rms);
 
-      needleGroup.setAttribute('transform', 'rotate(' + (-90 + scaled*180) + ' 120 130)');
-      levelValue.textContent = Math.round(scaled*100);
-      levelValue.style.color = categoryFor(scaled).color;
+      needleGroup.setAttribute('transform', 'rotate(' + (-90 + level*180) + ' 120 130)');
+      levelValue.textContent = Math.round(level*100);
 
       const now = performance.now();
 
       if (!ev.above){
-        if (scaled > THRESH_ON){
-          ev.above = true; ev.peak = scaled; ev.aboveSince = now; ev.belowSince = 0;
+        levelValue.style.color = '#6B8F6B';
+        if (level > THRESH_ON){
+          ev.above = true; ev.peak = level; ev.aboveSince = now; ev.belowSince = 0;
           setStatus('Rülpser läuft…', 'rec');
+        } else {
+          liveTimer.textContent = '';
         }
       } else {
-        ev.peak = Math.max(ev.peak, scaled);
+        ev.peak = Math.max(ev.peak, level);
         const duration = now - ev.aboveSince;
-        if (scaled < THRESH_OFF){ if (!ev.belowSince) ev.belowSince = now; }
+        liveTimer.textContent = (duration/1000).toFixed(1) + 's';
+        levelValue.style.color = categoryFor(scoreFrom(ev.peak, duration)).color;
+
+        if (level < THRESH_OFF){ if (!ev.belowSince) ev.belowSince = now; }
         else { ev.belowSince = 0; }
         const silentLongEnough = ev.belowSince && (now - ev.belowSince >= END_SILENCE_MS);
 
         if (silentLongEnough || duration >= MAX_EVENT_MS){
+          // effektive Dauer = bis zum Beginn der Stille (nicht die Stille mitzählen)
+          const effEnd = ev.belowSince ? ev.belowSince : now;
+          const effDuration = Math.min(MAX_EVENT_MS, effEnd - ev.aboveSince);
           const peak = ev.peak;
           ev.above = false;
-          if (duration >= MIN_EVENT_MS){
-            registerBurp(peak);
+          if (effDuration >= MIN_EVENT_MS){
+            registerBurp(peak, effDuration);
             finishListening(true);
           } else {
             setStatus('Zu kurz – weiter…', 'rec');
+            liveTimer.textContent = '';
           }
           return;
         }
@@ -424,6 +466,7 @@ function finishListening(auto){
   needleGroup.setAttribute('transform', 'rotate(-90 120 130)');
   levelValue.textContent = '0';
   levelValue.style.color = '#6B8F6B';
+  liveTimer.textContent = '';
   renderSteps();
   renderChips();
   if (auto){
