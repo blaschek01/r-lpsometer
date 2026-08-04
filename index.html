@@ -19,179 +19,229 @@
     background: radial-gradient(ellipse at top, var(--bg1) 0%, var(--bg2) 65%);
     color: var(--cream);
     font-family: 'JetBrains Mono', monospace;
-    padding: 32px 16px 64px;
+    padding: 28px 16px 64px;
     display:flex; justify-content:center;
   }
   .container { width:100%; max-width:480px; }
-  .eyebrow { font-size:11px; letter-spacing:3px; color:var(--muted); text-align:center; margin-bottom:4px; }
-  h1 { font-family:'Oswald',sans-serif; font-weight:700; font-size:40px; letter-spacing:1px; text-align:center; margin:0 0 6px; }
-  .subtitle { text-align:center; color:var(--muted); font-size:13px; margin:0 0 28px; }
-  .gauge-panel {
+  h1 { font-family:'Oswald',sans-serif; font-weight:700; font-size:38px; letter-spacing:1px; text-align:center; margin:0 0 24px; }
+
+  .steps { display:flex; justify-content:center; gap:6px; margin-bottom:22px; }
+  .step-dot { display:flex; align-items:center; gap:6px; font-size:11px; letter-spacing:1px; color:var(--muted); }
+  .step-dot .num { width:20px; height:20px; border-radius:50%; border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:11px; }
+  .step-dot.active .num { border-color:var(--brass); color:var(--brass); }
+  .step-dot.active { color:var(--brass); }
+  .step-sep { color:var(--border); align-self:center; }
+
+  .card {
     background:var(--panel); border:1px solid var(--border); border-radius:16px;
-    padding:24px 20px 20px; display:flex; flex-direction:column; align-items:center;
+    padding:22px 20px; margin-bottom:20px;
   }
-  .gauge-panel svg { width:100%; max-width:360px; }
-  .readout { display:flex; align-items:baseline; gap:8px; margin-top:-8px; }
-  .readout-value { font-family:'Oswald',sans-serif; font-size:48px; font-weight:600; }
-  .readout-unit { font-size:11px; letter-spacing:2px; color:var(--muted); }
-  .cat-badge { margin-top:6px; font-size:12px; font-weight:700; letter-spacing:1.5px; border:1px solid; border-radius:999px; padding:3px 14px; }
-  .mic-button {
-    margin-top:20px; border:none; border-radius:10px; padding:12px 22px;
-    font-family:'Oswald',sans-serif; font-weight:600; font-size:14px; letter-spacing:0.5px;
-    color:var(--ink); display:flex; align-items:center; gap:8px; cursor:pointer; background:var(--brass);
-  }
-  .mic-button.listening { background:var(--red); }
-  .error-text { color:var(--red); font-size:12px; margin-top:12px; text-align:center; }
-  .hint { color:var(--muted); font-size:12px; margin-top:12px; text-align:center; }
-  .flash {
-    margin-top:14px; background:rgba(201,169,97,0.12); border:1px solid var(--brass);
-    color:var(--brass-bright); border-radius:8px; padding:8px 14px; font-size:12px;
-    display:flex; align-items:center; justify-content:center; gap:6px;
-  }
-  .section { margin-top:28px; }
-  .section-label { font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:2px; color:var(--muted); margin-bottom:12px; display:flex; align-items:center; gap:6px; }
+  .card-label { font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:2px; color:var(--muted); margin-bottom:14px; display:flex; align-items:center; gap:6px; }
+
   .chip-row { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
   .chip {
-    border:1px solid var(--border); border-radius:999px; padding:6px 10px 6px 14px;
-    color:var(--cream); font-size:13px; display:flex; align-items:center; gap:8px;
+    border:1px solid var(--border); border-radius:999px; padding:8px 12px 8px 16px;
+    color:var(--cream); font-size:14px; display:flex; align-items:center; gap:8px;
     cursor:pointer; background:transparent; font-family:'JetBrains Mono',monospace;
   }
-  .chip.active { border-color:var(--brass); background:rgba(201,169,97,0.15); }
+  .chip.active { border-color:var(--brass); background:rgba(201,169,97,0.15); color:var(--brass-bright); }
   .chip-delete { display:flex; align-items:center; color:var(--muted); }
   .add-row { display:flex; gap:6px; }
   .add-row input {
-    background:var(--panel); border:1px solid var(--border); border-radius:999px;
-    padding:7px 14px; color:var(--cream); font-size:13px; font-family:'JetBrains Mono',monospace;
-    outline:none; width:140px;
+    background:var(--bg2); border:1px solid var(--border); border-radius:999px;
+    padding:8px 14px; color:var(--cream); font-size:14px; font-family:'JetBrains Mono',monospace;
+    outline:none; width:150px;
   }
   .add-button {
-    background:var(--brass); border:none; border-radius:50%; width:32px; height:32px;
+    background:var(--brass); border:none; border-radius:50%; width:36px; height:36px;
     display:flex; align-items:center; justify-content:center; color:var(--ink); cursor:pointer; flex-shrink:0;
   }
+
+  .gauge-wrap { display:flex; flex-direction:column; align-items:center; }
+  .gauge-wrap svg { width:100%; max-width:340px; }
+  .readout { display:flex; align-items:baseline; gap:8px; margin-top:-6px; }
+  .readout-value { font-family:'Oswald',sans-serif; font-size:46px; font-weight:600; }
+  .readout-unit { font-size:11px; letter-spacing:2px; color:var(--muted); }
+  .status-text { font-size:13px; color:var(--muted); margin-top:8px; text-align:center; min-height:18px; }
+  .status-text.rec { color:var(--red); }
+  .status-text.armed { color:var(--brass-bright); }
+
+  .big-button {
+    margin-top:18px; width:100%; border:none; border-radius:12px; padding:16px 22px;
+    font-family:'Oswald',sans-serif; font-weight:600; font-size:16px; letter-spacing:0.5px;
+    color:var(--ink); display:flex; align-items:center; justify-content:center; gap:10px;
+    cursor:pointer; background:var(--brass);
+  }
+  .big-button.stop { background:var(--red); color:var(--cream); }
+  .big-button:disabled { opacity:0.4; cursor:not-allowed; }
+  .error-text { color:var(--red); font-size:12px; margin-top:12px; text-align:center; }
+
+  .result-card {
+    margin-top:16px; border-radius:12px; padding:18px; text-align:center;
+    border:1px solid var(--brass); background:rgba(201,169,97,0.10);
+    animation: pop 0.35s ease;
+  }
+  @keyframes pop { from { transform:scale(0.9); opacity:0; } to { transform:scale(1); opacity:1; } }
+  .result-name { font-family:'Oswald',sans-serif; font-size:22px; font-weight:600; }
+  .result-cat { font-size:15px; font-weight:700; letter-spacing:1px; margin:6px 0; }
+  .result-score { font-size:13px; color:var(--muted); }
+
   .empty-state { color:var(--muted); font-size:13px; font-style:italic; }
-  .row { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid #241f19; }
-  .row-rank { font-family:'Oswald',sans-serif; font-size:16px; color:var(--muted); width:18px; text-align:center; }
+  .row { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid #241f19; }
+  .row:last-child { border-bottom:none; }
+  .row-rank { font-family:'Oswald',sans-serif; font-size:18px; color:var(--muted); width:22px; text-align:center; }
+  .row.top1 .row-rank { color:var(--yellow); }
   .row-info { flex:1; min-width:0; }
-  .row-name { font-size:14px; margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .row-bar-track { height:5px; background:#241f19; border-radius:3px; overflow:hidden; }
+  .row-name { font-size:15px; margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .row-bar-track { height:6px; background:#241f19; border-radius:3px; overflow:hidden; }
   .row-bar-fill { height:100%; border-radius:3px; transition:width 300ms ease; }
-  .row-stats { text-align:right; min-width:76px; }
-  .row-count { font-family:'Oswald',sans-serif; font-size:16px; font-weight:600; }
+  .row-stats { text-align:right; min-width:84px; }
+  .row-count { font-family:'Oswald',sans-serif; font-size:18px; font-weight:600; }
   .row-cat { font-size:10px; letter-spacing:0.5px; margin-top:2px; }
+
   .reset-button {
-    margin-top:24px; width:100%; background:transparent; border:1px solid var(--border);
-    border-radius:10px; padding:10px 0; color:var(--muted); font-size:12px;
+    margin-top:8px; width:100%; background:transparent; border:1px solid var(--border);
+    border-radius:10px; padding:11px 0; color:var(--muted); font-size:12px;
     display:flex; align-items:center; justify-content:center; cursor:pointer; gap:6px;
     font-family:'JetBrains Mono',monospace;
   }
-  svg.icon { width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  svg.icon { stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
 </style>
 </head>
 <body>
 <div class="container">
-  <div class="eyebrow">LIVE PEGEL-ERKENNUNG</div>
   <h1>RÜLPSO-METER</h1>
-  <p class="subtitle">Erkennt, zählt und bewertet – pro Person, in Echtzeit.</p>
 
-  <div class="gauge-panel">
-    <svg viewBox="0 0 240 150">
-      <defs>
-        <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stop-color="#6B8F6B"/>
-          <stop offset="45%" stop-color="#C9A961"/>
-          <stop offset="75%" stop-color="#E3934A"/>
-          <stop offset="100%" stop-color="#D6483D"/>
-        </linearGradient>
-      </defs>
-      <path d="M 20 130 A 100 100 0 0 1 220 130" fill="none" stroke="url(#arcGrad)" stroke-width="10" stroke-linecap="round" opacity="0.85"/>
-      <g id="ticks"></g>
-      <g id="needleGroup" transform="rotate(-90 120 130)">
-        <line x1="120" y1="130" x2="120" y2="42" stroke="#EDE3CE" stroke-width="3"/>
-        <circle cx="120" cy="130" r="7" fill="#EDE3CE"/>
-      </g>
-      <circle cx="120" cy="130" r="3" fill="#161310"/>
-    </svg>
-    <div class="readout">
-      <span class="readout-value" id="levelValue" style="color:var(--green)">0</span>
-      <span class="readout-unit">PEGEL</span>
-    </div>
-    <div class="cat-badge" id="catBadge" style="border-color:var(--green); color:var(--green)">Mini</div>
-    <button class="mic-button" id="micButton">
-      <svg class="icon" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-      <span id="micLabel">Mikrofon aktivieren</span>
-    </button>
-    <div class="error-text" id="errorText" style="display:none"></div>
-    <div class="hint" id="hintText">Wähle unten eine aktive Person aus, bevor du loslegst.</div>
+  <div class="steps">
+    <div class="step-dot" id="stepDot1"><span class="num">1</span> PERSON</div>
+    <span class="step-sep">›</span>
+    <div class="step-dot" id="stepDot2"><span class="num">2</span> START</div>
+    <span class="step-sep">›</span>
+    <div class="step-dot" id="stepDot3"><span class="num">3</span> RÜLPS</div>
   </div>
 
-  <div class="flash" id="flashBox" style="display:none"></div>
-
-  <div class="section">
-    <div class="section-label">TEILNEHMER</div>
+  <div class="card">
+    <div class="card-label">① TEILNEHMER WÄHLEN</div>
     <div class="chip-row" id="chipRow">
       <div class="add-row">
-        <input id="newNameInput" placeholder="Name hinzufügen" maxlength="20">
-        <button class="add-button" id="addPersonBtn">
-          <svg class="icon" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="17" y1="11" x2="23" y2="11"/></svg>
+        <input id="newNameInput" placeholder="Name eingeben" maxlength="20">
+        <button class="add-button" id="addPersonBtn" aria-label="hinzufügen">
+          <svg class="icon" viewBox="0 0 24 24" width="18" height="18"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         </button>
       </div>
     </div>
   </div>
 
-  <div class="section">
-    <div class="section-label">RANGLISTE</div>
-    <div id="leaderboard"><div class="empty-state">Noch keine Teilnehmer – oben hinzufügen.</div></div>
+  <div class="card">
+    <div class="card-label">② MIKRO STARTEN &nbsp;›&nbsp; ③ RÜLPSEN</div>
+    <div class="gauge-wrap">
+      <svg viewBox="0 0 240 150">
+        <defs>
+          <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#6B8F6B"/>
+            <stop offset="45%" stop-color="#C9A961"/>
+            <stop offset="75%" stop-color="#E3934A"/>
+            <stop offset="100%" stop-color="#D6483D"/>
+          </linearGradient>
+        </defs>
+        <path d="M 20 130 A 100 100 0 0 1 220 130" fill="none" stroke="url(#arcGrad)" stroke-width="10" stroke-linecap="round" opacity="0.85"/>
+        <g id="ticks"></g>
+        <g id="needleGroup" transform="rotate(-90 120 130)">
+          <line x1="120" y1="130" x2="120" y2="42" stroke="#EDE3CE" stroke-width="3"/>
+          <circle cx="120" cy="130" r="7" fill="#EDE3CE"/>
+        </g>
+        <circle cx="120" cy="130" r="3" fill="#161310"/>
+      </svg>
+      <div class="readout">
+        <span class="readout-value" id="levelValue" style="color:var(--green)">0</span>
+        <span class="readout-unit">PEGEL</span>
+      </div>
+      <div class="status-text" id="statusText">Wähle oben zuerst eine Person aus.</div>
+
+      <button class="big-button" id="micButton" disabled>
+        <svg class="icon" viewBox="0 0 24 24" width="20" height="20"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        <span id="micLabel">Mikrofon starten</span>
+      </button>
+      <div class="error-text" id="errorText" style="display:none"></div>
+    </div>
+
+    <div id="resultSlot"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">
+      <svg class="icon" viewBox="0 0 24 24" width="14" height="14"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+      RANGLISTE
+    </div>
+    <div id="leaderboard"><div class="empty-state">Noch keine Rülpser erfasst.</div></div>
   </div>
 
   <button class="reset-button" id="resetBtn">
-    <svg class="icon" viewBox="0 0 24 24" style="width:14px;height:14px"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+    <svg class="icon" viewBox="0 0 24 24" width="14" height="14"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
     Alle Zähler zurücksetzen
   </button>
 </div>
 
 <script>
-const THRESH_ON = 0.16, THRESH_OFF = 0.09, COOLDOWN_MS = 700, MIN_EVENT_MS = 120;
+// ===== Einstellungen (bei Bedarf anpassen) =====
+const THRESH_ON = 0.30;    // ab hier beginnt ein Rülpser (höher = unempfindlicher)
+const THRESH_OFF = 0.15;   // darunter gilt der Rülpser als beendet
+const MIN_EVENT_MS = 200;  // kürzere Geräusche werden ignoriert
+const MAX_EVENT_MS = 5000; // Notbremse: nach so vielen ms wird spätestens beendet
+const END_SILENCE_MS = 250;// so lange muss es leise sein, damit "beendet" gilt
+// ================================================
+
 const CATEGORIES = [
-  { max:0.30, label:'Mini', color:'#6B8F6B' },
-  { max:0.55, label:'Standard', color:'#C9A961' },
-  { max:0.75, label:'Bierzelt-Format', color:'#E3934A' },
-  { max:0.90, label:'Wandschütternd', color:'#D6483D' },
+  { max:0.42, label:'Mini', color:'#6B8F6B' },
+  { max:0.58, label:'Standard', color:'#C9A961' },
+  { max:0.74, label:'Bierzelt-Format', color:'#E3934A' },
+  { max:0.88, label:'Wandschütternd', color:'#D6483D' },
   { max:1.01, label:'LEGENDÄR', color:'#F0D24A' },
 ];
 function categoryFor(v){ return CATEGORIES.find(c => v <= c.max) || CATEGORIES[CATEGORIES.length-1]; }
 function uid(){ return Math.random().toString(36).slice(2,10); }
+function escapeHtml(s){ return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
 let persons = [];
 let activeId = null;
 let listening = false;
 let audioCtx, analyser, stream, rafId;
-const evState = { above:false, peak:0, aboveSince:0, cooldownUntil:0 };
+const ev = { above:false, peak:0, aboveSince:0, belowSince:0 };
 
-const STORAGE_KEY = 'roelpso_data_v1';
+const STORAGE_KEY = 'roelpso_data_v2';
 function load(){
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      persons = parsed.persons || [];
-      activeId = parsed.activeId || null;
-    }
-  } catch(e) {}
+    if (raw){ const p = JSON.parse(raw); persons = p.persons || []; activeId = p.activeId || null; }
+  } catch(e){}
 }
 function save(){
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ persons, activeId })); } catch(e) {}
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ persons, activeId })); } catch(e){}
 }
 
 const ticksGroup = document.getElementById('ticks');
 for (let i=0;i<=10;i++){
   const a = (-180 + i*18) * Math.PI/180;
-  const x1 = 120+92*Math.cos(a), y1=130+92*Math.sin(a);
-  const x2 = 120+102*Math.cos(a), y2=130+102*Math.sin(a);
-  const line = document.createElementNS('http://www.w3.org/2000/svg','line');
-  line.setAttribute('x1',x1); line.setAttribute('y1',y1);
-  line.setAttribute('x2',x2); line.setAttribute('y2',y2);
-  line.setAttribute('stroke','#8A8073'); line.setAttribute('stroke-width','2');
-  ticksGroup.appendChild(line);
+  const x1=120+92*Math.cos(a), y1=130+92*Math.sin(a);
+  const x2=120+102*Math.cos(a), y2=130+102*Math.sin(a);
+  const l = document.createElementNS('http://www.w3.org/2000/svg','line');
+  l.setAttribute('x1',x1); l.setAttribute('y1',y1); l.setAttribute('x2',x2); l.setAttribute('y2',y2);
+  l.setAttribute('stroke','#8A8073'); l.setAttribute('stroke-width','2');
+  ticksGroup.appendChild(l);
+}
+
+const micButton = document.getElementById('micButton');
+const micLabel = document.getElementById('micLabel');
+const errorText = document.getElementById('errorText');
+const needleGroup = document.getElementById('needleGroup');
+const levelValue = document.getElementById('levelValue');
+const statusText = document.getElementById('statusText');
+const resultSlot = document.getElementById('resultSlot');
+
+function renderSteps(){
+  document.getElementById('stepDot1').classList.toggle('active', !activeId);
+  document.getElementById('stepDot2').classList.toggle('active', !!activeId && !listening);
+  document.getElementById('stepDot3').classList.toggle('active', listening);
 }
 
 function renderChips(){
@@ -201,51 +251,64 @@ function renderChips(){
   persons.forEach(p => {
     const chip = document.createElement('div');
     chip.className = 'chip' + (p.id === activeId ? ' active' : '');
-    chip.innerHTML = `<span>${escapeHtml(p.name)}</span><span class="chip-delete" data-id="${p.id}">
-      <svg class="icon" viewBox="0 0 24 24" style="width:12px;height:12px"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-    </span>`;
-    chip.addEventListener('click', () => { activeId = p.id; save(); renderChips(); renderHint(); renderLeaderboard(); });
+    chip.innerHTML = '<span>' + escapeHtml(p.name) + '</span><span class="chip-delete">' +
+      '<svg class="icon" viewBox="0 0 24 24" width="13" height="13"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>' +
+      '</span>';
+    chip.addEventListener('click', () => {
+      if (listening) return;
+      activeId = p.id; save(); update();
+    });
     chip.querySelector('.chip-delete').addEventListener('click', (e) => {
       e.stopPropagation();
       persons = persons.filter(x => x.id !== p.id);
       if (activeId === p.id) activeId = null;
-      save(); renderChips(); renderHint(); renderLeaderboard();
+      save(); update();
     });
     row.insertBefore(chip, addRow);
   });
 }
-function escapeHtml(s){ return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-
-function renderHint(){
-  const hint = document.getElementById('hintText');
-  const active = persons.find(p => p.id === activeId);
-  hint.textContent = active ? `Aktive Person: ${active.name}` : 'Wähle unten eine aktive Person aus, bevor du loslegst.';
-}
 
 function renderLeaderboard(){
   const el = document.getElementById('leaderboard');
-  if (persons.length === 0) { el.innerHTML = '<div class="empty-state">Noch keine Teilnehmer – oben hinzufügen.</div>'; return; }
-  const globalMax = Math.max(0.001, ...persons.map(p => p.loudest));
-  const sorted = [...persons].sort((a,b) => b.count - a.count);
-  el.innerHTML = sorted.map((p, i) => {
-    const pct = Math.round((p.loudest / globalMax) * 100);
+  const withData = persons.filter(p => p.count > 0);
+  if (withData.length === 0){ el.innerHTML = '<div class="empty-state">Noch keine Rülpser erfasst.</div>'; return; }
+  const globalMax = Math.max(0.001, ...withData.map(p => p.loudest));
+  const sorted = [...withData].sort((a,b) => b.count - a.count || b.loudest - a.loudest);
+  el.innerHTML = sorted.map((p,i) => {
+    const pct = Math.round((p.loudest/globalMax)*100);
     const c = categoryFor(p.loudest);
-    return `<div class="row">
-      <div class="row-rank">${i+1}</div>
-      <div class="row-info">
-        <div class="row-name">${escapeHtml(p.name)}</div>
-        <div class="row-bar-track"><div class="row-bar-fill" style="width:${pct}%;background:${c.color}"></div></div>
-      </div>
-      <div class="row-stats">
-        <div class="row-count">${p.count}×</div>
-        <div class="row-cat" style="color:${c.color}">${p.loudest > 0 ? c.label : '–'}</div>
-      </div>
-    </div>`;
+    return '<div class="row ' + (i===0?'top1':'') + '">' +
+      '<div class="row-rank">' + (i+1) + '</div>' +
+      '<div class="row-info">' +
+        '<div class="row-name">' + escapeHtml(p.name) + '</div>' +
+        '<div class="row-bar-track"><div class="row-bar-fill" style="width:' + pct + '%;background:' + c.color + '"></div></div>' +
+      '</div>' +
+      '<div class="row-stats">' +
+        '<div class="row-count">' + p.count + '×</div>' +
+        '<div class="row-cat" style="color:' + c.color + '">' + c.label + '</div>' +
+      '</div>' +
+    '</div>';
   }).join('');
 }
 
+function setStatus(text, cls){
+  statusText.textContent = text;
+  statusText.className = 'status-text' + (cls ? ' '+cls : '');
+}
+
+function update(){
+  renderSteps();
+  renderChips();
+  renderLeaderboard();
+  micButton.disabled = !activeId;
+  if (!listening){
+    const active = persons.find(p => p.id === activeId);
+    setStatus(active ? ('Bereit für ' + active.name + ' – Mikrofon starten.') : 'Wähle oben zuerst eine Person aus.');
+  }
+}
+
 document.getElementById('addPersonBtn').addEventListener('click', addPerson);
-document.getElementById('newNameInput').addEventListener('keydown', e => { if (e.key === 'Enter') addPerson(); });
+document.getElementById('newNameInput').addEventListener('keydown', e => { if (e.key==='Enter') addPerson(); });
 function addPerson(){
   const input = document.getElementById('newNameInput');
   const name = input.value.trim();
@@ -254,51 +317,49 @@ function addPerson(){
   persons.push(p);
   activeId = p.id;
   input.value = '';
-  save(); renderChips(); renderHint(); renderLeaderboard();
+  save(); update();
 }
 
 document.getElementById('resetBtn').addEventListener('click', () => {
   persons = persons.map(p => ({ ...p, count:0, loudest:0 }));
-  save(); renderLeaderboard();
+  save(); update();
 });
 
-function registerEvent(peak){
+function showResult(name, peak){
+  const c = categoryFor(peak);
+  resultSlot.innerHTML = '<div class="result-card" style="border-color:' + c.color + '">' +
+    '<div class="result-name">' + escapeHtml(name) + '</div>' +
+    '<div class="result-cat" style="color:' + c.color + '">' + c.label + '</div>' +
+    '<div class="result-score">Pegel ' + Math.round(peak*100) + ' · +1 Rülpser</div>' +
+  '</div>';
+}
+
+function registerBurp(peak){
   const p = persons.find(x => x.id === activeId);
   if (!p) return;
   p.count += 1;
   p.loudest = Math.max(p.loudest, peak);
-  save(); renderLeaderboard();
-  showFlash(p.name, peak);
+  save();
+  showResult(p.name, peak);
+  renderLeaderboard();
 }
-function showFlash(name, value){
-  const box = document.getElementById('flashBox');
-  const cat = categoryFor(value);
-  box.style.display = 'flex';
-  box.textContent = `${name} · ${cat.label} · Pegel ${Math.round(value*100)}`;
-  clearTimeout(showFlash._t);
-  showFlash._t = setTimeout(() => { box.style.display = 'none'; }, 1400);
-}
-
-const micButton = document.getElementById('micButton');
-const micLabel = document.getElementById('micLabel');
-const errorText = document.getElementById('errorText');
-const needleGroup = document.getElementById('needleGroup');
-const levelValue = document.getElementById('levelValue');
-const catBadge = document.getElementById('catBadge');
 
 micButton.addEventListener('click', () => { listening ? stopListening() : startListening(); });
 
 async function startListening(){
   errorText.style.display = 'none';
+  resultSlot.innerHTML = '';
+  if (!activeId) return;
   try {
     stream = await navigator.mediaDevices.getUserMedia({ audio:true });
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    audioCtx = new AudioCtx();
-    const source = audioCtx.createMediaStreamSource(stream);
+    const AC = window.AudioContext || window.webkitAudioContext;
+    audioCtx = new AC();
+    const src = audioCtx.createMediaStreamSource(stream);
     analyser = audioCtx.createAnalyser();
     analyser.fftSize = 1024;
-    source.connect(analyser);
+    src.connect(analyser);
     const data = new Float32Array(analyser.fftSize);
+    ev.above = false; ev.peak = 0; ev.aboveSince = 0; ev.belowSince = 0;
 
     function loop(){
       analyser.getFloatTimeDomainData(data);
@@ -307,51 +368,74 @@ async function startListening(){
       const rms = Math.sqrt(sum/data.length);
       const scaled = Math.min(1, Math.max(0, Math.log10(rms*40+1)/1.3));
 
-      needleGroup.setAttribute('transform', `rotate(${-90 + scaled*180} 120 130)`);
+      needleGroup.setAttribute('transform', 'rotate(' + (-90 + scaled*180) + ' 120 130)');
       levelValue.textContent = Math.round(scaled*100);
-      const cat = categoryFor(scaled);
-      levelValue.style.color = cat.color;
-      catBadge.textContent = cat.label;
-      catBadge.style.borderColor = cat.color;
-      catBadge.style.color = cat.color;
+      levelValue.style.color = categoryFor(scaled).color;
 
       const now = performance.now();
-      if (!evState.above && scaled > THRESH_ON && now > evState.cooldownUntil){
-        evState.above = true; evState.aboveSince = now; evState.peak = scaled;
-      } else if (evState.above){
-        evState.peak = Math.max(evState.peak, scaled);
-        if (scaled < THRESH_OFF){
-          const duration = now - evState.aboveSince;
-          evState.above = false;
-          evState.cooldownUntil = now + COOLDOWN_MS;
-          if (duration >= MIN_EVENT_MS) registerEvent(evState.peak);
+
+      if (!ev.above){
+        if (scaled > THRESH_ON){
+          ev.above = true; ev.peak = scaled; ev.aboveSince = now; ev.belowSince = 0;
+          setStatus('Rülpser läuft…', 'rec');
+        }
+      } else {
+        ev.peak = Math.max(ev.peak, scaled);
+        const duration = now - ev.aboveSince;
+        if (scaled < THRESH_OFF){ if (!ev.belowSince) ev.belowSince = now; }
+        else { ev.belowSince = 0; }
+        const silentLongEnough = ev.belowSince && (now - ev.belowSince >= END_SILENCE_MS);
+
+        if (silentLongEnough || duration >= MAX_EVENT_MS){
+          const peak = ev.peak;
+          ev.above = false;
+          if (duration >= MIN_EVENT_MS){
+            registerBurp(peak);
+            finishListening(true);
+          } else {
+            setStatus('Zu kurz – weiter…', 'rec');
+          }
+          return;
         }
       }
       rafId = requestAnimationFrame(loop);
     }
     rafId = requestAnimationFrame(loop);
     listening = true;
-    micButton.classList.add('listening');
+    micButton.classList.add('stop');
     micLabel.textContent = 'Aufnahme stoppen';
+    setStatus('Zuhören… jetzt rülpsen!', 'armed');
+    renderSteps();
+    renderChips();
   } catch(e){
     errorText.style.display = 'block';
     errorText.textContent = 'Mikrofon-Zugriff wurde verweigert oder ist nicht verfügbar.';
   }
 }
-function stopListening(){
+
+function finishListening(auto){
   if (rafId) cancelAnimationFrame(rafId);
   if (stream) stream.getTracks().forEach(t => t.stop());
   if (audioCtx) audioCtx.close().catch(()=>{});
   audioCtx = null; analyser = null; stream = null;
   listening = false;
-  micButton.classList.remove('listening');
-  micLabel.textContent = 'Mikrofon aktivieren';
+  micButton.classList.remove('stop');
+  micLabel.textContent = 'Nächster Rülpser';
   needleGroup.setAttribute('transform', 'rotate(-90 120 130)');
   levelValue.textContent = '0';
   levelValue.style.color = '#6B8F6B';
+  renderSteps();
+  renderChips();
+  if (auto){
+    setStatus('Erfasst! Bereit für den nächsten – Person wählen & starten.');
+  } else {
+    update();
+  }
 }
 
-load(); renderChips(); renderHint(); renderLeaderboard();
+function stopListening(){ finishListening(false); }
+
+load(); update();
 </script>
 </body>
 </html>
