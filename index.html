@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Rülpso-Meter</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+  :root {
+    --bg1:#241f19; --bg2:#141110; --panel:#1D1813; --border:#3A342C;
+    --cream:#EDE3CE; --muted:#8A8073; --brass:#C9A961; --brass-bright:#E3C77D;
+    --green:#6B8F6B; --orange:#E3934A; --red:#D6483D; --yellow:#F0D24A;
+    --ink:#161310;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin:0; padding:0; }
+  body {
+    min-height:100vh;
+    background: radial-gradient(ellipse at top, var(--bg1) 0%, var(--bg2) 65%);
+    color: var(--cream);
+    font-family: 'JetBrains Mono', monospace;
+    padding: 32px 16px 64px;
+    display:flex; justify-content:center;
+  }
+  .container { width:100%; max-width:480px; }
+  .eyebrow { font-size:11px; letter-spacing:3px; color:var(--muted); text-align:center; margin-bottom:4px; }
+  h1 { font-family:'Oswald',sans-serif; font-weight:700; font-size:40px; letter-spacing:1px; text-align:center; margin:0 0 6px; }
+  .subtitle { text-align:center; color:var(--muted); font-size:13px; margin:0 0 28px; }
+  .gauge-panel {
+    background:var(--panel); border:1px solid var(--border); border-radius:16px;
+    padding:24px 20px 20px; display:flex; flex-direction:column; align-items:center;
+  }
+  .gauge-panel svg { width:100%; max-width:360px; }
+  .readout { display:flex; align-items:baseline; gap:8px; margin-top:-8px; }
+  .readout-value { font-family:'Oswald',sans-serif; font-size:48px; font-weight:600; }
+  .readout-unit { font-size:11px; letter-spacing:2px; color:var(--muted); }
+  .cat-badge { margin-top:6px; font-size:12px; font-weight:700; letter-spacing:1.5px; border:1px solid; border-radius:999px; padding:3px 14px; }
+  .mic-button {
+    margin-top:20px; border:none; border-radius:10px; padding:12px 22px;
+    font-family:'Oswald',sans-serif; font-weight:600; font-size:14px; letter-spacing:0.5px;
+    color:var(--ink); display:flex; align-items:center; gap:8px; cursor:pointer; background:var(--brass);
+  }
+  .mic-button.listening { background:var(--red); }
+  .error-text { color:var(--red); font-size:12px; margin-top:12px; text-align:center; }
+  .hint { color:var(--muted); font-size:12px; margin-top:12px; text-align:center; }
+  .flash {
+    margin-top:14px; background:rgba(201,169,97,0.12); border:1px solid var(--brass);
+    color:var(--brass-bright); border-radius:8px; padding:8px 14px; font-size:12px;
+    display:flex; align-items:center; justify-content:center; gap:6px;
+  }
+  .section { margin-top:28px; }
+  .section-label { font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:2px; color:var(--muted); margin-bottom:12px; display:flex; align-items:center; gap:6px; }
+  .chip-row { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  .chip {
+    border:1px solid var(--border); border-radius:999px; padding:6px 10px 6px 14px;
+    color:var(--cream); font-size:13px; display:flex; align-items:center; gap:8px;
+    cursor:pointer; background:transparent; font-family:'JetBrains Mono',monospace;
+  }
+  .chip.active { border-color:var(--brass); background:rgba(201,169,97,0.15); }
+  .chip-delete { display:flex; align-items:center; color:var(--muted); }
+  .add-row { display:flex; gap:6px; }
+  .add-row input {
+    background:var(--panel); border:1px solid var(--border); border-radius:999px;
+    padding:7px 14px; color:var(--cream); font-size:13px; font-family:'JetBrains Mono',monospace;
+    outline:none; width:140px;
+  }
+  .add-button {
+    background:var(--brass); border:none; border-radius:50%; width:32px; height:32px;
+    display:flex; align-items:center; justify-content:center; color:var(--ink); cursor:pointer; flex-shrink:0;
+  }
+  .empty-state { color:var(--muted); font-size:13px; font-style:italic; }
+  .row { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid #241f19; }
+  .row-rank { font-family:'Oswald',sans-serif; font-size:16px; color:var(--muted); width:18px; text-align:center; }
+  .row-info { flex:1; min-width:0; }
+  .row-name { font-size:14px; margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .row-bar-track { height:5px; background:#241f19; border-radius:3px; overflow:hidden; }
+  .row-bar-fill { height:100%; border-radius:3px; transition:width 300ms ease; }
+  .row-stats { text-align:right; min-width:76px; }
+  .row-count { font-family:'Oswald',sans-serif; font-size:16px; font-weight:600; }
+  .row-cat { font-size:10px; letter-spacing:0.5px; margin-top:2px; }
+  .reset-button {
+    margin-top:24px; width:100%; background:transparent; border:1px solid var(--border);
+    border-radius:10px; padding:10px 0; color:var(--muted); font-size:12px;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; gap:6px;
+    font-family:'JetBrains Mono',monospace;
+  }
+  svg.icon { width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="eyebrow">LIVE PEGEL-ERKENNUNG</div>
+  <h1>RÜLPSO-METER</h1>
+  <p class="subtitle">Erkennt, zählt und bewertet – pro Person, in Echtzeit.</p>
+
+  <div class="gauge-panel">
+    <svg viewBox="0 0 240 150">
+      <defs>
+        <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#6B8F6B"/>
+          <stop offset="45%" stop-color="#C9A961"/>
+          <stop offset="75%" stop-color="#E3934A"/>
+          <stop offset="100%" stop-color="#D6483D"/>
+        </linearGradient>
+      </defs>
+      <path d="M 20 130 A 100 100 0 0 1 220 130" fill="none" stroke="url(#arcGrad)" stroke-width="10" stroke-linecap="round" opacity="0.85"/>
+      <g id="ticks"></g>
+      <g id="needleGroup" transform="rotate(-90 120 130)">
+        <line x1="120" y1="130" x2="120" y2="42" stroke="#EDE3CE" stroke-width="3"/>
+        <circle cx="120" cy="130" r="7" fill="#EDE3CE"/>
+      </g>
+      <circle cx="120" cy="130" r="3" fill="#161310"/>
+    </svg>
+    <div class="readout">
+      <span class="readout-value" id="levelValue" style="color:var(--green)">0</span>
+      <span class="readout-unit">PEGEL</span>
+    </div>
+    <div class="cat-badge" id="catBadge" style="border-color:var(--green); color:var(--green)">Mini</div>
+    <button class="mic-button" id="micButton">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+      <span id="micLabel">Mikrofon aktivieren</span>
+    </button>
+    <div class="error-text" id="errorText" style="display:none"></div>
+    <div class="hint" id="hintText">Wähle unten eine aktive Person aus, bevor du loslegst.</div>
+  </div>
+
+  <div class="flash" id="flashBox" style="display:none"></div>
+
+  <div class="section">
+    <div class="section-label">TEILNEHMER</div>
+    <div class="chip-row" id="chipRow">
+      <div class="add-row">
+        <input id="newNameInput" placeholder="Name hinzufügen" maxlength="20">
+        <button class="add-button" id="addPersonBtn">
+          <svg class="icon" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="17" y1="11" x2="23" y2="11"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">RANGLISTE</div>
+    <div id="leaderboard"><div class="empty-state">Noch keine Teilnehmer – oben hinzufügen.</div></div>
+  </div>
+
+  <button class="reset-button" id="resetBtn">
+    <svg class="icon" viewBox="0 0 24 24" style="width:14px;height:14px"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+    Alle Zähler zurücksetzen
+  </button>
+</div>
+
+<script>
+const THRESH_ON = 0.16, THRESH_OFF = 0.09, COOLDOWN_MS = 700, MIN_EVENT_MS = 120;
+const CATEGORIES = [
+  { max:0.30, label:'Mini', color:'#6B8F6B' },
+  { max:0.55, label:'Standard', color:'#C9A961' },
+  { max:0.75, label:'Bierzelt-Format', color:'#E3934A' },
+  { max:0.90, label:'Wandschütternd', color:'#D6483D' },
+  { max:1.01, label:'LEGENDÄR', color:'#F0D24A' },
+];
+function categoryFor(v){ return CATEGORIES.find(c => v <= c.max) || CATEGORIES[CATEGORIES.length-1]; }
+function uid(){ return Math.random().toString(36).slice(2,10); }
+
+let persons = [];
+let activeId = null;
+let listening = false;
+let audioCtx, analyser, stream, rafId;
+const evState = { above:false, peak:0, aboveSince:0, cooldownUntil:0 };
+
+const STORAGE_KEY = 'roelpso_data_v1';
+function load(){
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      persons = parsed.persons || [];
+      activeId = parsed.activeId || null;
+    }
+  } catch(e) {}
+}
+function save(){
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ persons, activeId })); } catch(e) {}
+}
+
+const ticksGroup = document.getElementById('ticks');
+for (let i=0;i<=10;i++){
+  const a = (-180 + i*18) * Math.PI/180;
+  const x1 = 120+92*Math.cos(a), y1=130+92*Math.sin(a);
+  const x2 = 120+102*Math.cos(a), y2=130+102*Math.sin(a);
+  const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+  line.setAttribute('x1',x1); line.setAttribute('y1',y1);
+  line.setAttribute('x2',x2); line.setAttribute('y2',y2);
+  line.setAttribute('stroke','#8A8073'); line.setAttribute('stroke-width','2');
+  ticksGroup.appendChild(line);
+}
+
+function renderChips(){
+  const row = document.getElementById('chipRow');
+  const addRow = row.querySelector('.add-row');
+  row.querySelectorAll('.chip').forEach(el => el.remove());
+  persons.forEach(p => {
+    const chip = document.createElement('div');
+    chip.className = 'chip' + (p.id === activeId ? ' active' : '');
+    chip.innerHTML = `<span>${escapeHtml(p.name)}</span><span class="chip-delete" data-id="${p.id}">
+      <svg class="icon" viewBox="0 0 24 24" style="width:12px;height:12px"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+    </span>`;
+    chip.addEventListener('click', () => { activeId = p.id; save(); renderChips(); renderHint(); renderLeaderboard(); });
+    chip.querySelector('.chip-delete').addEventListener('click', (e) => {
+      e.stopPropagation();
+      persons = persons.filter(x => x.id !== p.id);
+      if (activeId === p.id) activeId = null;
+      save(); renderChips(); renderHint(); renderLeaderboard();
+    });
+    row.insertBefore(chip, addRow);
+  });
+}
+function escapeHtml(s){ return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function renderHint(){
+  const hint = document.getElementById('hintText');
+  const active = persons.find(p => p.id === activeId);
+  hint.textContent = active ? `Aktive Person: ${active.name}` : 'Wähle unten eine aktive Person aus, bevor du loslegst.';
+}
+
+function renderLeaderboard(){
+  const el = document.getElementById('leaderboard');
+  if (persons.length === 0) { el.innerHTML = '<div class="empty-state">Noch keine Teilnehmer – oben hinzufügen.</div>'; return; }
+  const globalMax = Math.max(0.001, ...persons.map(p => p.loudest));
+  const sorted = [...persons].sort((a,b) => b.count - a.count);
+  el.innerHTML = sorted.map((p, i) => {
+    const pct = Math.round((p.loudest / globalMax) * 100);
+    const c = categoryFor(p.loudest);
+    return `<div class="row">
+      <div class="row-rank">${i+1}</div>
+      <div class="row-info">
+        <div class="row-name">${escapeHtml(p.name)}</div>
+        <div class="row-bar-track"><div class="row-bar-fill" style="width:${pct}%;background:${c.color}"></div></div>
+      </div>
+      <div class="row-stats">
+        <div class="row-count">${p.count}×</div>
+        <div class="row-cat" style="color:${c.color}">${p.loudest > 0 ? c.label : '–'}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+document.getElementById('addPersonBtn').addEventListener('click', addPerson);
+document.getElementById('newNameInput').addEventListener('keydown', e => { if (e.key === 'Enter') addPerson(); });
+function addPerson(){
+  const input = document.getElementById('newNameInput');
+  const name = input.value.trim();
+  if (!name) return;
+  const p = { id:uid(), name, count:0, loudest:0 };
+  persons.push(p);
+  activeId = p.id;
+  input.value = '';
+  save(); renderChips(); renderHint(); renderLeaderboard();
+}
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  persons = persons.map(p => ({ ...p, count:0, loudest:0 }));
+  save(); renderLeaderboard();
+});
+
+function registerEvent(peak){
+  const p = persons.find(x => x.id === activeId);
+  if (!p) return;
+  p.count += 1;
+  p.loudest = Math.max(p.loudest, peak);
+  save(); renderLeaderboard();
+  showFlash(p.name, peak);
+}
+function showFlash(name, value){
+  const box = document.getElementById('flashBox');
+  const cat = categoryFor(value);
+  box.style.display = 'flex';
+  box.textContent = `${name} · ${cat.label} · Pegel ${Math.round(value*100)}`;
+  clearTimeout(showFlash._t);
+  showFlash._t = setTimeout(() => { box.style.display = 'none'; }, 1400);
+}
+
+const micButton = document.getElementById('micButton');
+const micLabel = document.getElementById('micLabel');
+const errorText = document.getElementById('errorText');
+const needleGroup = document.getElementById('needleGroup');
+const levelValue = document.getElementById('levelValue');
+const catBadge = document.getElementById('catBadge');
+
+micButton.addEventListener('click', () => { listening ? stopListening() : startListening(); });
+
+async function startListening(){
+  errorText.style.display = 'none';
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio:true });
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    audioCtx = new AudioCtx();
+    const source = audioCtx.createMediaStreamSource(stream);
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 1024;
+    source.connect(analyser);
+    const data = new Float32Array(analyser.fftSize);
+
+    function loop(){
+      analyser.getFloatTimeDomainData(data);
+      let sum = 0;
+      for (let i=0;i<data.length;i++) sum += data[i]*data[i];
+      const rms = Math.sqrt(sum/data.length);
+      const scaled = Math.min(1, Math.max(0, Math.log10(rms*40+1)/1.3));
+
+      needleGroup.setAttribute('transform', `rotate(${-90 + scaled*180} 120 130)`);
+      levelValue.textContent = Math.round(scaled*100);
+      const cat = categoryFor(scaled);
+      levelValue.style.color = cat.color;
+      catBadge.textContent = cat.label;
+      catBadge.style.borderColor = cat.color;
+      catBadge.style.color = cat.color;
+
+      const now = performance.now();
+      if (!evState.above && scaled > THRESH_ON && now > evState.cooldownUntil){
+        evState.above = true; evState.aboveSince = now; evState.peak = scaled;
+      } else if (evState.above){
+        evState.peak = Math.max(evState.peak, scaled);
+        if (scaled < THRESH_OFF){
+          const duration = now - evState.aboveSince;
+          evState.above = false;
+          evState.cooldownUntil = now + COOLDOWN_MS;
+          if (duration >= MIN_EVENT_MS) registerEvent(evState.peak);
+        }
+      }
+      rafId = requestAnimationFrame(loop);
+    }
+    rafId = requestAnimationFrame(loop);
+    listening = true;
+    micButton.classList.add('listening');
+    micLabel.textContent = 'Aufnahme stoppen';
+  } catch(e){
+    errorText.style.display = 'block';
+    errorText.textContent = 'Mikrofon-Zugriff wurde verweigert oder ist nicht verfügbar.';
+  }
+}
+function stopListening(){
+  if (rafId) cancelAnimationFrame(rafId);
+  if (stream) stream.getTracks().forEach(t => t.stop());
+  if (audioCtx) audioCtx.close().catch(()=>{});
+  audioCtx = null; analyser = null; stream = null;
+  listening = false;
+  micButton.classList.remove('listening');
+  micLabel.textContent = 'Mikrofon aktivieren';
+  needleGroup.setAttribute('transform', 'rotate(-90 120 130)');
+  levelValue.textContent = '0';
+  levelValue.style.color = '#6B8F6B';
+}
+
+load(); renderChips(); renderHint(); renderLeaderboard();
+</script>
+</body>
+</html>
